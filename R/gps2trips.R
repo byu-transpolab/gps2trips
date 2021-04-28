@@ -12,29 +12,35 @@
 #'
 gps2trips <- function(df, x = "x", y = "y") {
 
-
   # everything this function does goes in here.
 
 library(lubridate)
 library(tidyverse)
+library(hms)
 
-  # the following lines convert the timestamp column into separate date and time columns
+  # read in the dataset csv file for each person
 
+  individualDataSet <- read_csv("C:/Users/Gillian/Downloads/Health Study_5f5184e73e2fd848eac22aec_passivelocation_65.csv")
 
-  individualDataSet <- read.csv("C:/Users/Gillian/Downloads/Health Study_5f5184e73e2fd848eac22aec_passivelocation_65.csv")
-  timeanddateValue <- individualDataSet[,8]
-  convertDateAndTime <- data.frame(GivenFormat=c(timeanddateValue))
+  # separate date and time into separate columns
+  # select variables from data we are analyzing
 
-  convertDateAndTime %>%
-  separate(GivenFormat, into = c("Date", "Time"), sep = " ", remove = TRUE) %>%
-  mutate(Date = lubridate::as_date(Date,format= "%Y-%m-%d"),
-         Time = hms::as_hms(str_c(Time, ":00")))
+  cleaned_DataSet <- individualDataSet %>%
+    mutate(
+      Date = lubridate::date(timestamp),
+      hour = lubridate::hour(timestamp),
+      minute = lubridate::minute(timestamp),
+      second = lubridate::second(timestamp),
+      Time = hms::as_hms(str_c(hour, minute, second, sep = ":"))
+    ) %>%
+    select(userId, deviceId, Date, Time, lat, altitude, speed)
 
+  # A trip is defined as when someone is within the same x
+  # range of latitude for x number of minutes
 
-  # end of date and time column code
+  # This code divides the table up into trips using ^^
+  # definition of a trip
 
-  # continue the function below
-  # do we want to insert these columns back onto the CSV file? where to go from here?
 
 }
 
