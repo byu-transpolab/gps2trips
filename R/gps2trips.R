@@ -41,8 +41,16 @@ library(hms)
   # This code divides the table up into trips using ^^
   # definition of a trip
 
+  # One degree of latitude is approximately 69 miles
+
+pointsPerLatitude <- cleaned_DataSet %>%
+  group_by(lat) %>%
+  count()
 
 }
+
+
+
 
 
 
