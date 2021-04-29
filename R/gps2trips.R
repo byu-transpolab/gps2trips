@@ -33,7 +33,7 @@ library(hms)
       second = lubridate::second(timestamp),
       Time = hms::as_hms(str_c(hour, minute, second, sep = ":"))
     ) %>%
-    select(userId, deviceId, Date, Time, lat, altitude, speed)
+    select(userId, deviceId, Date, Time, lat, lon, altitude, speed)
 
   # A trip is defined as when someone is within the same x
   # range of latitude for x number of minutes
@@ -43,9 +43,8 @@ library(hms)
 
   # One degree of latitude is approximately 69 miles
 
-pointsPerLatitude <- cleaned_DataSet %>%
-  group_by(lat) %>%
-  count()
+stagnantPoints <- cleaned_DataSet %>%
+  filter(speed < 3 & speed > 0)
 
 }
 
