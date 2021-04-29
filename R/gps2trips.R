@@ -17,6 +17,7 @@ gps2trips <- function(df, x = "x", y = "y") {
 library(lubridate)
 library(tidyverse)
 library(hms)
+library(dplyr)
 
   # read in the dataset csv file for each person
 
@@ -25,7 +26,7 @@ library(hms)
   # separate date and time into separate columns
   # select variables from data we are analyzing
 
-  cleaned_DataSet <- individualDataSet %>%
+  separateDateandTime <- individualDataSet %>%
     mutate(
       Date = lubridate::date(timestamp),
       hour = lubridate::hour(timestamp),
@@ -33,20 +34,57 @@ library(hms)
       second = lubridate::second(timestamp),
       Time = hms::as_hms(str_c(hour, minute, second, sep = ":"))
     ) %>%
-    select(userId, deviceId, Date, Time, lat, lon, altitude, speed)
+    select(Date,Time) # See the separated columns
 
-  # A trip is defined as when someone is within the same x
-  # range of latitude for x number of minutes
+ # Calculate the distance the person traveled using the latitude and longitude values
+ # Haversine Formula
 
-  # This code divides the table up into trips using ^^
-  # definition of a trip
+    distanceTraveled <- function(lat,lon,lat1,lon1) {
+    R <- 6371 # Earth mean radius (km)
+    delta.lon <- (lon1-lon)
+    delta.lat <- (lat1-lat)
+    a <- sin(delta.lat/2)^2 + cos(lat) * cos(lat1) *sin(delta.lon/2)^2
+    c <- 2 * a*sin(min(1,sqrt(a)))
+    d <- R * c * 1000
+    return (d) # Distance in m
+    }
 
-  # One degree of latitude is approximately 69 miles
+    getDistance <- separateDateandTime %>%
+      mutate(
+        lat1 = lead(lat),
+        lon1 = lead(lon),
+      ) %>%
+      rowwise %>%
+      mutate (
+        distance_Meters = distanceTraveled(lat,lon,lat1,lon1)
+      ) %>%
+    select(lat,lon,distance_Meters) # See the latitude, longitude, and distance between each point
 
-stagnantPoints <- cleaned_DataSet %>%
-  filter(speed < 3 & speed > 0)
+   # Find the difference between times
 
+  delta.time <- function(Time, time1) {
+   t = time1 - Time
+   return (t)
 }
+    getTimeDifference <- separateDateandTime %>%
+      mutate(
+        time1 = lead(Time),
+      ) %>%
+      mutate (
+        TimeDifference_Seconds = delta.time(Time,time1)
+      ) %>%
+      select(Time,TimeDifference_Seconds) # See the time of day and time difference
+
+
+   # Calculate the speed by doing the distance traveled/ time
+
+     DeltaTime <-getTimeDifference$TimeDifference_Seconds # Giving an error for some reason
+     Distance <-getDistance$distance_Meters
+
+  # Add everything back into the original table (How?)
+
+  }
+
 
 
 
