@@ -13,6 +13,7 @@
 gps2trips <- function(df, x = "x", y = "y") {
 
   # everything this function does goes in here.
+  # install the necessary packages
 
 library(lubridate)
 library(tidyverse)
@@ -21,7 +22,7 @@ library(dplyr)
 
   # read in the dataset csv file for each person
 
-  individualDataSet <- read_csv("C:/Users/Gillian/Downloads/Health Study_5f5184e73e2fd848eac22aec_passivelocation_65.csv")
+  individualDataSet <- read_csv("C:/Users/gillian4/Downloads/Student Health Data/Health Study_5f5184e73e2fd848eac22aec_passivelocation_65.csv")
 
   # separate date and time into separate columns
   # select variables from data we are analyzing
@@ -33,8 +34,7 @@ library(dplyr)
       minute = lubridate::minute(timestamp),
       second = lubridate::second(timestamp),
       Time = hms::as_hms(str_c(hour, minute, second, sep = ":"))
-    ) %>%
-    select(Date,Time) # See the separated columns
+    )
 
  # Calculate the distance the person traveled using the latitude and longitude values
  # Haversine Formula
@@ -49,42 +49,45 @@ library(dplyr)
     return (d) # Distance in m
     }
 
-    getDistance <- separateDateandTime %>%
+  delta.time <- function(Time, time1) {
+   t = time1 - Time
+   return (t)
+  }
+
+  getTimeDifference <- separateDateandTime %>%
+      mutate(
+        time1 = lead(Time)
+      ) %>%
+      mutate (
+        TimeDifference_Seconds = delta.time(Time,time1)
+      )
+
+   getDistance <- getTimeDifference %>%
       mutate(
         lat1 = lead(lat),
         lon1 = lead(lon),
       ) %>%
       rowwise %>%
       mutate (
-        distance_Meters = distanceTraveled(lat,lon,lat1,lon1)
-      ) %>%
-    select(lat,lon,distance_Meters) # See the latitude, longitude, and distance between each point
-
-   # Find the difference between times
-
-  delta.time <- function(Time, time1) {
-   t = time1 - Time
-   return (t)
-}
-    getTimeDifference <- separateDateandTime %>%
-      mutate(
-        time1 = lead(Time),
-      ) %>%
-      mutate (
-        TimeDifference_Seconds = delta.time(Time,time1)
-      ) %>%
-      select(Time,TimeDifference_Seconds) # See the time of day and time difference
+       distance_Meters = distanceTraveled(lat,lon,lat1,lon1)
+      )
 
 
    # Calculate the speed by doing the distance traveled/ time
+   # Speed is in m/s
+   # Append this speed onto the final cleaned data set
+   # Cleaned data set only includes all of the variables we are interested in looking at for this project
 
-     DeltaTime <-getTimeDifference$TimeDifference_Seconds # Giving an error for some reason
-     Distance <-getDistance$distance_Meters
+Cleaned_DataSet <- getDistance %>%
+  mutate(
+    actual_speed = distance_Meters%/%as.integer(TimeDifference_Seconds)  # speed rounds to the nearest integer
+  ) %>%
+  select(userId,deviceId,Date,Time,altitude,lat,lon,distance_Meters,TimeDifference_Seconds,actual_speed)
 
-  # Add everything back into the original table (How?)
+# All the code up until this point is working. The next step is figuring out headways (?)
 
-  }
 
+}
 
 
 
