@@ -21,6 +21,6 @@ tar_option_set(packages = c("tidyverse","lubridate","hms","dplyr"))
 list(
 
   # Convert GPS Points into Trips
-  tar_target(data, data.frame(x = sample.int(100), y = sample.int(100))),
-  tar_target(summary, summ(data)) # Call your custom functions as needed.
+  tar_target(gps_data, getData("C:/Users/Gillian/Downloads/Health Study_5f5184e73e2fd848eac22aec_passivelocation_65.csv")),
+  tar_target(cleaned_data, cleanData(gps_data)) # Call your custom functions as needed.
 )
