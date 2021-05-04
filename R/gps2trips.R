@@ -10,7 +10,7 @@
 #'
 #' @export
 #'
-gps2trips <- function(df, x = "x", y = "y") {
+gps2trips <- function(df, x = "x", y = "y") {}
 
   # everything this function does goes in here.
   # install the necessary packages
@@ -39,15 +39,16 @@ library(dplyr)
 #' @param raw_file Path to raw file in local directory
 #' @return A tibble with raw gps data
 
-  getData <- read_csv("C:/Users/Gillian/Downloads/Health Study_5f5184e73e2fd848eac22aec_passivelocation_65.csv")
-
+  getData <- function(raw_file) {
+    read_csv(raw_file)
+  }
 
 #' Separate date and time into separate columns
-#' @param Raw GPS data as read in with 'individualDataSet()'
-#' @return A tibble with only selected variables
+#' @param Raw GPS data as read in with 'getData()'
+#' @return A clean tibble with only selected variables
 
-  clean_Data <- #function(gps_Data) {
-    getData %>%
+  cleanData <- function(gps_data) {
+    gps_data %>%
     arrange(timestamp) %>%
     mutate(
       Date = lubridate::date(timestamp),   # Separate Date and Time columns
@@ -75,24 +76,26 @@ library(dplyr)
 # All the code up until this point is working. The next step is figuring out headways (?)
 
 
-hist(as.numeric(clean_Data$actual_speed),
-     main = "Speed",
-     xlab = "Speed (m/s)",
-     ylab = "Frequency",
-     col = "salmon"
-     )
-ggplot(clean_Data, aes(x=lon, y=lat, color=actual_speed)) + geom_point()
+#hist(as.numeric(cleanData$actual_speed),
+#     main = "Speed",
+#     xlab = "Speed (m/s)",
+#     ylab = "Frequency",
+#     col = "sky blue"
+#     )
+#ggplot(cleanData, aes(x=lon, y=lat, color=actual_speed)) + geom_point()
 
-library(sf)
-library(leaflet)
-sf_Data <- st_as_sf(Cleaned_DataSet,coords = c("lon","lat"))
+#library(sf)
+#library(leaflet)
+#sf_Data <- st_as_sf(Cleaned_DataSet,coords = c("lon","lat"))
 
-leaflet(sf_Data) %>%
-  addProviderTiles(providers$Esri.WorldGrayCanvas) %>%
-  addCircleMarkers()
+#leaflet(sf_Data) %>%
+  #addProviderTiles(providers$Esri.WorldGrayCanvas) %>%
+  #addCircleMarkers()
 
 targets::tar_script()
 targets::tar_edit()
 
-
+tar_make()
+tar_read(summary)
+tar_visnetwork()
 
