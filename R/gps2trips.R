@@ -28,6 +28,7 @@ library(dplyr)
   # select variables from data we are analyzing
 
   separateDateandTime <- individualDataSet %>%
+    arrange(timestamp) %>%
     mutate(
       Date = lubridate::date(timestamp),
       hour = lubridate::hour(timestamp),
@@ -55,6 +56,7 @@ library(dplyr)
   }
 
   getTimeDifference <- separateDateandTime %>%
+      group_by(Date) %>%
       mutate(
         time1 = lead(Time)
       ) %>%
@@ -87,10 +89,19 @@ Cleaned_DataSet <- getDistance %>%
 # All the code up until this point is working. The next step is figuring out headways (?)
 
 
-}
+hist(as.numeric(Cleaned_DataSet$TimeDifference_Seconds))
+ggplot(Cleaned_DataSet, aes(x=lon, y=lat, color=actual_speed)) + geom_point()
 
+library(sf)
+library(leaflet)
+sf_Data <- st_as_sf(Cleaned_DataSet,coords = c("lon","lat"))
 
+leaflet(sf_Data) %>%
+  addProviderTiles(providers$Esri.WorldGrayCanvas) %>%
+  addCircleMarkers()
 
+targets::tar_script()
+targets::tar_edit()
 
-
+1}
 
