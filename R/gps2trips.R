@@ -20,27 +20,13 @@ library(tidyverse)
 library(hms)
 library(dplyr)
 
-  # read in the dataset csv file for each person
+#' Calculate the distance the person traveled using the latitude and longitude
+#' values and Halversine formula
+#' @param two latitude and two longitude values from the separated date and
+#' time tibble as created by 'separateDateandTime()'
+#' @return distance traveled in meters
 
-  individualDataSet <- read_csv("C:/Users/gillian4/Downloads/Student Health Data/Health Study_5f5184e73e2fd848eac22aec_passivelocation_65.csv")
-
-  # separate date and time into separate columns
-  # select variables from data we are analyzing
-
-  separateDateandTime <- individualDataSet %>%
-    arrange(timestamp) %>%
-    mutate(
-      Date = lubridate::date(timestamp),
-      hour = lubridate::hour(timestamp),
-      minute = lubridate::minute(timestamp),
-      second = lubridate::second(timestamp),
-      Time = hms::as_hms(str_c(hour, minute, second, sep = ":"))
-    )
-
- # Calculate the distance the person traveled using the latitude and longitude values
- # Haversine Formula
-
-    distanceTraveled <- function(lat,lon,lat1,lon1) {
+  distanceTraveled <- function(lat,lon,lat1,lon1) {
     R <- 6371 # Earth mean radius (km)
     delta.lon <- (lon1-lon)
     delta.lat <- (lat1-lat)
@@ -48,49 +34,54 @@ library(dplyr)
     c <- 2 * a*sin(min(1,sqrt(a)))
     d <- R * c * 1000
     return (d) # Distance in m
-    }
-
-  delta.time <- function(Time, time1) {
-   t = time1 - Time
-   return (t)
   }
 
-  getTimeDifference <- separateDateandTime %>%
+#' @param raw_file Path to raw file in local directory
+#' @return A tibble with raw gps data
+
+  getData <- read_csv("C:/Users/Gillian/Downloads/Health Study_5f5184e73e2fd848eac22aec_passivelocation_65.csv")
+
+
+#' Separate date and time into separate columns
+#' @param Raw GPS data as read in with 'individualDataSet()'
+#' @return A tibble with only selected variables
+
+  clean_Data <- #function(gps_Data) {
+    getData %>%
+    arrange(timestamp) %>%
+    mutate(
+      Date = lubridate::date(timestamp),   # Separate Date and Time columns
+      hour = lubridate::hour(timestamp),
+      minute = lubridate::minute(timestamp),
+      second = lubridate::second(timestamp),
+      Time = hms::as_hms(str_c(hour, minute, second, sep = ":")),
+      lat1=lead(lat),
+      lon1 = lead(lon)
+    ) %>%
       group_by(Date) %>%
       mutate(
-        time1 = lead(Time)
+        TimeDifference = lead(Time)-Time    # Time difference between each GPS data point
       ) %>%
-      mutate (
-        TimeDifference_Seconds = delta.time(Time,time1)
-      )
-
-   getDistance <- getTimeDifference %>%
-      mutate(
-        lat1 = lead(lat),
-        lon1 = lead(lon),
-      ) %>%
-      rowwise %>%
-      mutate (
-       distance_Meters = distanceTraveled(lat,lon,lat1,lon1)
-      )
-
-
-   # Calculate the speed by doing the distance traveled/ time
-   # Speed is in m/s
-   # Append this speed onto the final cleaned data set
-   # Cleaned data set only includes all of the variables we are interested in looking at for this project
-
-Cleaned_DataSet <- getDistance %>%
-  mutate(
-    actual_speed = distance_Meters%/%as.integer(TimeDifference_Seconds)  # speed rounds to the nearest integer
-  ) %>%
-  select(userId,deviceId,Date,Time,altitude,lat,lon,distance_Meters,TimeDifference_Seconds,actual_speed)
+    rowwise %>%
+    mutate (
+      distance_Meters = distanceTraveled(lat,lon,lat1,lon1) # Distance in meters between in each GPS data point
+    ) %>%
+    mutate(
+      actual_speed = distance_Meters/as.integer(TimeDifference)  # Speed at each GPS data point
+    ) %>%
+    select(userId,deviceId,Date,Time,lat,lon,distance_Meters,TimeDifference,actual_speed)  # Select variables we want
+  }
 
 # All the code up until this point is working. The next step is figuring out headways (?)
 
 
-hist(as.numeric(Cleaned_DataSet$TimeDifference_Seconds))
-ggplot(Cleaned_DataSet, aes(x=lon, y=lat, color=actual_speed)) + geom_point()
+hist(as.numeric(clean_Data$actual_speed),
+     main = "Speed",
+     xlab = "Speed (m/s)",
+     ylab = "Frequency",
+     col = "salmon"
+     )
+ggplot(clean_Data, aes(x=lon, y=lat, color=actual_speed)) + geom_point()
 
 library(sf)
 library(leaflet)
@@ -103,5 +94,5 @@ leaflet(sf_Data) %>%
 targets::tar_script()
 targets::tar_edit()
 
-1}
+
 
