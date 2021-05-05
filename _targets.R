@@ -22,3 +22,4 @@ list(
   tar_target(raw_data, getData(raw_data_file)),
   tar_target(cleaned_data, cleanData(raw_data))
 )
+
