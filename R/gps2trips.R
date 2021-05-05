@@ -92,10 +92,4 @@ library(dplyr)
 #  addProviderTiles(providers$Esri.WorldGrayCanvas) %>%
 #  addCircleMarkers()
 
-targets::tar_script()
-targets::tar_edit()
-
-tar_make()
-tar_read(summary)
-tar_visnetwork()
 
