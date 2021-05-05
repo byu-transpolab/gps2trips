@@ -9,18 +9,16 @@ library(targets)
 # Define custom functions and other global objects.
 # This is where you write source(\"R/functions.R\")
 # if you keep your functions in external scripts.
-
 source("R/gps2trips.R")
 
-options(dplyr.summarise.inform = FALSE)
-
 # Set target-specific options such as packages.
-tar_option_set(packages = c("tidyverse","lubridate","hms","dplyr"))
+tar_option_set(packages = c("dplyr","hms", "lubridate", "tidyverse"))
 
 # End this file with a list of target objects.
 list(
-
-  # Convert GPS Points into Trips
-  tar_target(gps_data, getData("C:/Users/Gillian/Downloads/Health Study_5f5184e73e2fd848eac22aec_passivelocation_65.csv")),
-  tar_target(cleaned_data, cleanData(gps_data)) # Call your custom functions as needed.
+  tar_target(raw_data_file,
+             "C:/Users/Gillian/Downloads/Health Study_5f5184e73e2fd848eac22aec_passivelocation_65.csv",
+             format = "file"),
+  tar_target(raw_data, getData(raw_data_file)),
+  tar_target(cleaned_data, cleanData(raw_data))
 )
