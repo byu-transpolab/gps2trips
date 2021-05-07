@@ -94,14 +94,14 @@ library(dplyr)
 
   headways <- function(cleaned_data) {
   cleaned_data %>%
-  group_by(Date, Time, actual_speed) %>% # Not 100% sure if this is what we want to group by
-      arrange(Time, .by_group = TRUE)
-  }
+  group_by(Date,actual_speed) %>% # Not 100% sure if this is what we want to group by
+      arrange(Time, .by_group = TRUE) %>%
+  mutate(
+      headways =
 
-  multiply <- function(x,y){
-    s = x * y
-  return(s) }
+  )
+}
 
-
+  headways(cleaned_data)
 
 }
