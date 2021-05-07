@@ -71,10 +71,8 @@ library(dplyr)
       actual_speed = distance_Meters/as.integer(TimeDifference)  # Speed at each GPS data point
     ) %>%
     select(userId,deviceId,Date,Time,lat,lon,distance_Meters,TimeDifference,actual_speed)  # Select variables we want
-  }
 
-# All the code up until this point is working. The next step is figuring out headways (?)
-
+# Visualize our speeds and lat/lon in histograms and ggplots
 
 #hist(as.numeric(cleanData$actual_speed),
 #     main = "Speed",
@@ -92,4 +90,12 @@ library(dplyr)
 #  addProviderTiles(providers$Esri.WorldGrayCanvas) %>%
 #  addCircleMarkers()
 
+# All the code up until this point is working. The next step is figuring out headways (?)
 
+  headways <- function(cleaned_data) {
+  group_by(Date, Time, actual_speed) %>% # Not 100% sure if this is what we want to group by
+      arrange(Time, .by_group = TRUE)
+  }
+
+
+}
