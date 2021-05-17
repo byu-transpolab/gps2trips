@@ -12,7 +12,7 @@ library(targets)
 source("R/gps2trips.R")
 
 # Set target-specific options such as packages.
-tar_option_set(packages = c("dplyr","hms", "lubridate", "tidyverse"))
+tar_option_set(packages = c("dplyr","hms", "lubridate", "tidyverse", "leaflet", "sf"))
 
 # End this file with a list of target objects.
 list(
@@ -20,6 +20,9 @@ list(
              "C:/Users/Gillian/Downloads/Health Study_5f5184e73e2fd848eac22aec_passivelocation_65.csv",
              format = "file"),
   tar_target(raw_data, getData(raw_data_file)),
-  tar_target(cleaned_data, cleanData(raw_data))
+  tar_target(cleaned_data, cleanData(raw_data)),
+  tar_target(visual_map,plotData(cleaned_data)),
+  tar_target(cumulatives_speeds, getCumSpeed(cleaned_data)),
+  tar_target(cumspeed_hist, histCumSpeed(getCumSpeed(cleaned_data)$cumspeed))
 )
 
