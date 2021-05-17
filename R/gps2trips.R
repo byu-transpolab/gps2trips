@@ -74,8 +74,8 @@ library(dplyr)
     select(userId,deviceId,Date,Time,lat,lon,distance_Meters,TimeDifference,actual_speed)  # Select variables we want
 }
 
-plotData <- function(x) {
-  sf_Data <- st_as_sf(x,coords = c("lon","lat"))
+plotData <- function(cleaned_data) {
+  sf_Data <- st_as_sf(cleaned_data,coords = c("lon","lat"))
   leaflet(sf_Data) %>%
   addProviderTiles(providers$Esri.WorldGrayCanvas) %>%
   addCircleMarkers()
@@ -94,6 +94,7 @@ getCumSpeed <- function(cleaned_data) { # This is the slope of the plotTimeline 
       totalDistance = cumsum(distance_Meters),
       cumspeed = lead(totalDistance)-totalDistance/as.integer(TimeDifference)
     ) %>%
+    filter(cumspeed >= 0) %>%
     group_by(lat,lon) %>%
     arrange(cumspeed)
 }
@@ -102,5 +103,5 @@ getCumSpeed <- function(cleaned_data) { # This is the slope of the plotTimeline 
 # where the slope is nearly infinite
 
 histCumSpeed <- function(cumulativespeeds) {
-  hist(cumulativespeeds, xlab="Cumulative speeds (m/s)", ylab = "Frequency", col=blues9)
+  hist(cumulativespeeds, xlab ="Cumulative speeds (m/s)", ylab = "Frequency", col=blues9)
 }
