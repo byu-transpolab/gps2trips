@@ -47,8 +47,8 @@ library(dplyr)
 #' @param Raw GPS data as read in with 'getData()'
 #' @return A clean tibble with only selected variables
 
-  cleanData <- function(gps_data) {
-    gps_data %>%
+  cleanData <- function(raw_data) {
+    raw_data %>%
     arrange(timestamp) %>%
     mutate(
       Date = lubridate::date(timestamp),   # Separate Date and Time columns
@@ -56,52 +56,46 @@ library(dplyr)
       minute = lubridate::minute(timestamp),
       second = lubridate::second(timestamp),
       Time = hms::as_hms(str_c(hour, minute, second, sep = ":")),
-      lat1=lead(lat),
-      lon1 = lead(lon)
     ) %>%
+     # group_by(Date, minute) %>%
+    #sample_frac(.1) %>%
       group_by(Date) %>%
+      arrange(Time) %>%
       mutate(
-        TimeDifference = lead(Time)-Time    # Time difference between each GPS data point
+        lat1=lead(lat),
+        lon1 = lead(lon),
+        TimeDifference = lead(Time)-Time # Time difference between each GPS data point
       ) %>%
     rowwise %>%
     mutate (
-      distance_Meters = distanceTraveled(lat,lon,lat1,lon1) # Distance in meters between in each GPS data point
-    ) %>%
-    mutate(
+      distance_Meters = distanceTraveled(lat,lon,lat1,lon1), # Distance in meters between in each GPS data point
       actual_speed = distance_Meters/as.integer(TimeDifference)  # Speed at each GPS data point
     ) %>%
     select(userId,deviceId,Date,Time,lat,lon,distance_Meters,TimeDifference,actual_speed)  # Select variables we want
-
-# Visualize our speeds and lat/lon in histograms and ggplots
-
-#hist(as.numeric(cleanData$actual_speed),
-#     main = "Speed",
-#     xlab = "Speed (m/s)",
-#     ylab = "Frequency",
-#     col = "sky blue"
-#     )
-#ggplot(cleanData, aes(x=lon, y=lat, color=actual_speed)) + geom_point()
-
-#library(sf)
-#library(leaflet)
-#sf_Data <- st_as_sf(Cleaned_DataSet,coords = c("lon","lat"))
-
-#leaflet(sf_Data) %>%
-#  addProviderTiles(providers$Esri.WorldGrayCanvas) %>%
-#  addCircleMarkers()
-
-# All the code up until this point is working. The next step is figuring out headways (?)
-
-  headways <- function(cleaned_data) {
-  cleaned_data %>%
-  group_by(Date,actual_speed) %>% # Not 100% sure if this is what we want to group by
-      arrange(Time, .by_group = TRUE) %>%
-  mutate(
-      headways =
-
-  )
 }
 
-  headways(cleaned_data)
+plotData <- function(x) {
+  sf_Data <- st_as_sf(x,coords = c("lon","lat"))
+  leaflet(sf_Data) %>%
+  addProviderTiles(providers$Esri.WorldGrayCanvas) %>%
+  addCircleMarkers()
+}
+
+getCumSpeed <- function(cleaned_data) { # This is the slope of the plotTimeline curve
+    cleaned_data %>%
+    ungroup() %>%
+    mutate(
+      totalDistance = cumsum(distance_Meters),
+      cumspeed = totalDistance/as.integer(TimeDifference)
+    )
+}
+# Where the slope of this line is zero is likely where a trip destination is
+plotTimeline <- function(df) {
+  ggplot(df, aes(x=Time,y=totalDistance)) +
+    geom_line()
 
 }
+
+#Figure out a way to isolate where the slopes are zero or isolate the "columns"
+# where the slope is nearly infinite
+
