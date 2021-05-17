@@ -86,16 +86,19 @@ getCumSpeed <- function(cleaned_data) { # This is the slope of the plotTimeline 
     ungroup() %>%
     mutate(
       totalDistance = cumsum(distance_Meters),
-      cumspeed = totalDistance/as.integer(TimeDifference)
+      cumspeed = lead(totalDistance)-totalDistance/as.integer(TimeDifference)
     )
 }
+
 # Where the slope of this line is zero is likely where a trip destination is
 plotTimeline <- function(df) {
-  ggplot(df, aes(x=Time,y=totalDistance)) +
+  ggplot(df, aes(x=Time,y=totalDistance)) + xlab("Time(s)") +ylab("Total Distance(m)") +
     geom_line()
-
 }
 
 #Figure out a way to isolate where the slopes are zero or isolate the "columns"
 # where the slope is nearly infinite
 
+histCumSpeed <- function(cumulativespeeds) {
+  hist(cumulativespeeds)
+}
