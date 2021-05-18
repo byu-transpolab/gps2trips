@@ -84,22 +84,22 @@ cleanData <- function(raw_data) {
     ) %>%
 
     # calculate elapsed time and distances
-    #mutate(
-    #  userId,
-    #  timestamp,
-    #  TimeDifference = lead(timestamp)- timestamp, # Time difference between each GPS data point
-    #  lat, lon, lat1, lon1,
-    #  geometry,
-    #  distance_new =  sf::st_distance(
-    #    geometry, lead(geometry, default = empty),
-    #    by_element = TRUE),
+    mutate(
+      userId,
+      timestamp,
+      TimeDifference = lead(timestamp)- timestamp, # Time difference between each GPS data point
+      lat, lon, lat1, lon1,
+      geometry,
+      distance_new =  sf::st_distance(
+        geometry, lead(geometry, default = empty),
+        by_element = TRUE),
       #speed = distance_Meters / as.numeric(TimeDifference),
-    #) %>%
+    ) %>%
     rowwise() %>%
     mutate(
       distance_Meters = distanceTraveled(lat, lon, lat1, lon1),
     ) %>%
-    select(userId,Date,Time,distance_Meters,speed)
+    select(userId,Date,Time,distance_Meters,distance_new,speed)
 }
 
 #' @param cleaned data frame from cleanData function
