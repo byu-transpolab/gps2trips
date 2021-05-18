@@ -52,10 +52,10 @@ cleanData <- function(raw_data) {
   # empty coordinate point to use for lead/lag distances
   empty <- st_as_sfc("POINT(EMPTY)", crs = 4326)
 
-   raw_data %>%
+  x <- raw_data %>%
     group_by(userId) %>%
     arrange(timestamp) %>%
-
+    slice(1:100) %>%
     # clean up times as lubridate objects
     mutate(
       Date = lubridate::date(timestamp),   # Separate Date and Time columns
@@ -66,19 +66,33 @@ cleanData <- function(raw_data) {
     ) %>%
 
     # convert to SF data frame
+    ungroup() %>%
     st_as_sf(coords = c("lon", "lat"), crs = 4326)  %>%
+    mutate(
+      lon = st_coordinates(.)[,1],
+      lat = st_coordinates(.)[,2],
+      lon1 = lead(lon),
+      lat1 = lead(lat)
+    ) %>%
 
     # calculate elapsed time and distances
     transmute(
       userId,
       timestamp,
       TimeDifference = lead(timestamp)- timestamp, # Time difference between each GPS data point
-      distance_Meters = sf::st_distance(
-        geometry, lead(geometry, default = empty),
-        by_element = TRUE),
-      speed = distance_Meters / as.numeric(TimeDifference),
+      lat, lon, lat1, lon1,
+      distance_new =  sf::st_distance(
+         geometry, lead(geometry, default = empty),
+         by_element = TRUE),
+      #speed = distance_Meters / as.numeric(TimeDifference),
       geometry
+    ) %>%
+    rowwise() %>%
+    mutate(
+      distance_Meters = distanceTraveled(lat, lon, lat1, lon1)
     )
+
+  x
 }
 
 plotData <- function(cleaned_data) {
