@@ -40,8 +40,11 @@ distanceTraveled <- function(lat,lon,lat1,lon1) {
 #' @param raw_file Path to raw file in local directory
 #' @return A tibble with raw gps data
 
-getData <- function(raw_file) {
-  read_csv(raw_file)
+getData <- function(input_files) {
+  lapply(input_files, function(file){
+    read_csv(file)
+  }) %>%
+    bind_rows()
 }
 
 #' Separate date and time into separate columns
