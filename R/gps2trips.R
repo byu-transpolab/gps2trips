@@ -6,6 +6,7 @@ library(hms)
 library(dplyr)
 library(sf)
 library(leaflet)
+library(lwgeom)
 
 #' Function to read GPS points into trips
 #'
@@ -24,17 +25,22 @@ gps2trips <- function(df, x = "x", y = "y") {}
 
 #' Calculate the distance the person traveled using the latitude and longitude
 #' values and Halversine formula
-#' @param two latitude and two longitude values from the separated date and
-#' time tibble as created by 'separateDateandTime()'
+#' @param two latitude and two longitude values from raw data
 #' @return distance traveled in meters
+
 distanceTraveled <- function(lat,lon,lat1,lon1) {
-  R <- 6371 # Earth mean radius (km)
-  delta.lon <- (lon1-lon)
-  delta.lat <- (lat1-lat)
-  a <- sin(delta.lat/2)^2 + cos(lat) * cos(lat1) *sin(delta.lon/2)^2
-  c <- 2 * a*sin(min(1,sqrt(a)))
-  d <- R * c * 1000
-  return (d) # Distance in m
+  rad <- pi/180
+  a1 <- lat*rad
+  a2 <- lon*rad
+  b1 <- lat1*rad
+  b2 <- lon1*rad
+  dlon <- b2- a2
+  dlat <- b1 - a1
+  a <- (sin(dlat/2))^2 + cos(a1)*cos(b1)*(sin(dlon/2))^2
+  c <- 2*atan2(sqrt(a), sqrt(1 - a))
+  R <- 6378137 # Avg radius of earth in km
+  d <- R*c  # Distancein meters
+  return(d)
 }
 
 #' @param raw_file Path to raw file in local directory
@@ -47,7 +53,6 @@ getData <- function(input_files) {
     bind_rows()
 }
 
-#' Separate date and time into separate columns
 #' @param Raw GPS data as read in with 'getData()'
 #' @return A clean tibble with only selected variables
 cleanData <- function(raw_data) {
@@ -55,10 +60,10 @@ cleanData <- function(raw_data) {
   # empty coordinate point to use for lead/lag distances
   empty <- st_as_sfc("POINT(EMPTY)", crs = 4326)
 
-  x <- raw_data %>%
+    raw_data %>%
     group_by(userId) %>%
     arrange(timestamp) %>%
-    slice(1:100) %>%
+    slice(1:5000) %>%
     # clean up times as lubridate objects
     mutate(
       Date = lubridate::date(timestamp),   # Separate Date and Time columns
@@ -79,53 +84,53 @@ cleanData <- function(raw_data) {
     ) %>%
 
     # calculate elapsed time and distances
-    transmute(
-      userId,
-      timestamp,
-      TimeDifference = lead(timestamp)- timestamp, # Time difference between each GPS data point
-      lat, lon, lat1, lon1,
-      distance_new =  sf::st_distance(
-         geometry, lead(geometry, default = empty),
-         by_element = TRUE),
+    #mutate(
+    #  userId,
+    #  timestamp,
+    #  TimeDifference = lead(timestamp)- timestamp, # Time difference between each GPS data point
+    #  lat, lon, lat1, lon1,
+    #  geometry,
+    #  distance_new =  sf::st_distance(
+    #    geometry, lead(geometry, default = empty),
+    #    by_element = TRUE),
       #speed = distance_Meters / as.numeric(TimeDifference),
-      geometry
-    ) %>%
+    #) %>%
     rowwise() %>%
     mutate(
-      distance_Meters = distanceTraveled(lat, lon, lat1, lon1)
-    )
-
-  x
+      distance_Meters = distanceTraveled(lat, lon, lat1, lon1),
+    ) %>%
+    select(userId,Date,Time,distance_Meters,speed)
 }
+
+#' @param cleaned data frame from cleanData function
+#' @return world geographic map showing GPS points
 
 plotData <- function(cleaned_data) {
   sf_Data <- st_as_sf(cleaned_data,coords = c("lon","lat"))
   leaflet(sf_Data) %>%
-  addProviderTiles(providers$Esri.WorldGrayCanvas) %>%
-  addCircleMarkers()
+    addProviderTiles(providers$Esri.WorldGrayCanvas) %>%
+    addCircleMarkers()
 }
 
-# Where the slope of this line is zero is likely where a trip destination is
-plotTimeline <- function(df) {
+#' Where the slope of this line is zero is likely where a trip destination is
+#' @param cumulative distance calculated from getTotalDistance function
+#' @return line graph of distance traveled over time
+
+plotTimeline <- function(cumulative_distance) {
   ggplot(df, aes(x=Time,y=totalDistance)) + xlab("Time(s)") +ylab("Total Distance(m)") +
     geom_line()
 }
 
-getCumSpeed <- function(cleaned_data) { # This is the slope of the plotTimeline curve
+#' @param cleaned data fram from cleanData function
+#' @return total distance to use in plotData function
+
+getTotalDistance <- function(cleaned_data) { # This is the slope of the plotTimeline curve
   cleaned_data %>%
     ungroup() %>%
     mutate(
-      totalDistance = cumsum(distance_Meters),
-      cumspeed = lead(totalDistance)-totalDistance/as.integer(TimeDifference)
-    ) %>%
-    filter(cumspeed >= 0) %>%
-    group_by(lat,lon) %>%
-    arrange(cumspeed)
+      totalDistance = cumsum(distance_Meters)
+    )
 }
 
 #Figure out a way to isolate where the slopes are zero or isolate the "columns"
 # where the slope is nearly infinite
-
-histCumSpeed <- function(cumulativespeeds) {
-  hist(cumulativespeeds, xlab ="Cumulative speeds (m/s)", ylab = "Frequency", col=blues9)
-}
