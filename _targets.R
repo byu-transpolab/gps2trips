@@ -11,7 +11,7 @@ library(targets)
 # if you keep your functions in external scripts.
 source("R/gps2trips.R")
 
-input_files <- list.files("data")
+input_files <- list.files("data", full.names = TRUE)
 
 
 # Set target-specific options such as packages.
@@ -19,7 +19,7 @@ tar_option_set(packages = c("dplyr","hms", "lubridate", "tidyverse", "leaflet", 
 
 # End this file with a list of target objects.
 list(
-  tar_target(raw_data_file, "data", format = "file"),
+  tar_target(raw_data_file, input_files, format = "file"),
   tar_target(raw_data, getData(raw_data_file)),
   tar_target(cleaned_data, cleanData(raw_data)),
   tar_target(visual_map,plotData(cleaned_data)),
