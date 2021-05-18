@@ -99,7 +99,7 @@ cleanData <- function(raw_data) {
     mutate(
       distance_Meters = distanceTraveled(lat, lon, lat1, lon1),
     ) %>%
-    select(userId,Date,Time,distance_Meters,distance_new,speed)
+    select(userId,Date,Time,distance_Meters,distance_new)
 }
 
 #' @param cleaned data frame from cleanData function
