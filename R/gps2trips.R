@@ -57,13 +57,10 @@ getData <- function(input_files) {
 #' @return A clean tibble with only selected variables
 cleanData <- function(raw_data) {
 
-  # empty coordinate point to use for lead/lag distances
-  empty <- st_as_sfc("POINT(EMPTY)", crs = 4326)
-
     raw_data %>%
     group_by(userId) %>%
     arrange(timestamp) %>%
-    slice(1:5000) %>%
+    slice(1:500) %>%
     # clean up times as lubridate objects
     mutate(
       Date = lubridate::date(timestamp),   # Separate Date and Time columns
@@ -84,22 +81,18 @@ cleanData <- function(raw_data) {
     ) %>%
 
     # calculate elapsed time and distances
-    #mutate(
-    #  userId,
-    #  timestamp,
-    #  TimeDifference = lead(timestamp)- timestamp, # Time difference between each GPS data point
-    #  lat, lon, lat1, lon1,
-    #  geometry,
-    #  distance_new =  sf::st_distance(
-    #    geometry, lead(geometry, default = empty),
-    #    by_element = TRUE),
-      #speed = distance_Meters / as.numeric(TimeDifference),
-    #) %>%
+    mutate(
+      userId,
+      timestamp,
+      TimeDifference = lead(timestamp)- timestamp, # Time difference between each GPS data point
+      lat, lon, lat1, lon1,
+      geometry,
+    ) %>%
     rowwise() %>%
     mutate(
       distance_Meters = distanceTraveled(lat, lon, lat1, lon1),
     ) %>%
-    select(userId,Date,Time,distance_Meters,speed)
+    select(userId,Date,Time,TimeDifference,distance_Meters)
 }
 
 #' @param cleaned data frame from cleanData function
