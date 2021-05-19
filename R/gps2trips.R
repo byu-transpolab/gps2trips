@@ -60,7 +60,7 @@ cleanData <- function(raw_data) {
     raw_data %>%
     group_by(userId) %>%
     arrange(timestamp) %>%
-    slice(1:500) %>%
+    slice(1:8000) %>%
     # clean up times as lubridate objects
     mutate(
       Date = lubridate::date(timestamp),   # Separate Date and Time columns
@@ -90,7 +90,7 @@ cleanData <- function(raw_data) {
     ) %>%
     rowwise() %>%
     mutate(
-      distance_Meters = distanceTraveled(lat, lon, lat1, lon1),
+      distance_Meters = distanceTraveled(lat, lon, lat1, lon1)
     ) %>%
     select(userId,Date,Time,TimeDifference,distance_Meters)
 }
@@ -110,7 +110,7 @@ plotData <- function(cleaned_data) {
 #' @return line graph of distance traveled over time
 
 plotTimeline <- function(cumulative_distance) {
-  ggplot(df, aes(x=Time,y=totalDistance)) + xlab("Time(s)") +ylab("Total Distance(m)") +
+  ggplot(cumulative_distance, aes(x=Time,y=totalDistance)) + xlab("Time(s)") +ylab("Total Distance(m)") +
     geom_line()
 }
 
@@ -118,12 +118,12 @@ plotTimeline <- function(cumulative_distance) {
 #' @return total distance to use in plotData function
 
 getTotalDistance <- function(cleaned_data) { # This is the slope of the plotTimeline curve
-  cleaned_data %>%
-    ungroup() %>%
+    cleaned_data %>%
+    ungroup %>%
     mutate(
       totalDistance = cumsum(distance_Meters)
     )
 }
 
-#Figure out a way to isolate where the slopes are zero or isolate the "columns"
+# Figure out a way to isolate where the slopes are zero or isolate the "columns"
 # where the slope is nearly infinite
