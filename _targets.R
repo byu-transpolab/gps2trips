@@ -15,14 +15,14 @@ input_files <- list.files("data")
 
 
 # Set target-specific options such as packages.
-tar_option_set(packages = c("dplyr","hms", "lubridate", "tidyverse", "leaflet", "sf", "lwgeom"))
+tar_option_set(packages = c("dplyr","hms", "lubridate", "tidyverse", "leaflet", "sf", "lwgeom", "zoo"))
 
 # End this file with a list of target objects.
 list(
-  tar_target(raw_data_file, "data", format = "file"),
-  tar_target(raw_data, getData(raw_data_file)),
+  tar_target(raw_data, getData("data/Health Study_5f5184e73e2fd848eac22aec_passivelocation_65.csv")),
   tar_target(cleaned_data, cleanData(raw_data)),
   tar_target(visual_map,plotData(cleaned_data)),
   tar_target(cumulative_distance,getTotalDistance(cleaned_data)),
-  tar_target(distance_vs_time, plotTimeline(cumulative_distance))
+  tar_target(distance_vs_time, plotTimeline(cumulative_distance)),
+  tar_target(list_of_activities, getActivities(cumulative_distance))
 )
