@@ -7,6 +7,7 @@ library(dplyr)
 library(sf)
 library(leaflet)
 library(lwgeom)
+library(zoo)
 
 #' Function to read GPS points into trips
 #'
@@ -38,8 +39,8 @@ distanceTraveled <- function(lat,lon,lat1,lon1) {
   dlat <- b1 - a1
   a <- (sin(dlat/2))^2 + cos(a1)*cos(b1)*(sin(dlon/2))^2
   c <- 2*atan2(sqrt(a), sqrt(1 - a))
-  R <- 6378137 # Avg radius of earth in km
-  d <- R*c  # Distancein meters
+  R <- 6378137 # Avg radius of earth in m
+  d <- R*c  # Distance in meters
   return(d)
 }
 
@@ -60,7 +61,7 @@ cleanData <- function(raw_data) {
     raw_data %>%
     group_by(userId) %>%
     arrange(timestamp) %>%
-    slice(1:8000) %>%
+    #slice(1:8000) %>%
     # clean up times as lubridate objects
     mutate(
       Date = lubridate::date(timestamp),   # Separate Date and Time columns
@@ -92,7 +93,7 @@ cleanData <- function(raw_data) {
     mutate(
       distance_Meters = distanceTraveled(lat, lon, lat1, lon1)
     ) %>%
-    select(userId,Date,Time,TimeDifference,distance_Meters)
+    select(userId,timestamp,Date,Time,TimeDifference,distance_Meters)
 }
 
 #' @param cleaned data frame from cleanData function
@@ -110,20 +111,39 @@ plotData <- function(cleaned_data) {
 #' @return line graph of distance traveled over time
 
 plotTimeline <- function(cumulative_distance) {
-  ggplot(cumulative_distance, aes(x=Time,y=totalDistance)) + xlab("Time(s)") +ylab("Total Distance(m)") +
+  ggplot(cumulative_distance, aes(x=Time,y=totalDistance, color = factor(Date))) +
+    xlab("Time(s)") +ylab("Total Distance(m)") +
     geom_line()
 }
 
-#' @param cleaned data fram from cleanData function
+#' @param cleaned data frame from cleanData function
 #' @return total distance to use in plotData function
 
 getTotalDistance <- function(cleaned_data) { # This is the slope of the plotTimeline curve
     cleaned_data %>%
     ungroup %>%
+    group_by(Date) %>%
+    arrange(timestamp)%>%
     mutate(
       totalDistance = cumsum(distance_Meters)
     )
 }
 
-# Figure out a way to isolate where the slopes are zero or isolate the "columns"
-# where the slope is nearly infinite
+plotSpeed <- function(cumulative_distance){
+  ggplot(cumulative_distance %>%
+           mutate(
+             speed = distance_Meters/as.numeric(TimeDifference)),
+         aes(x=Time, y=speed, color = factor(Date))) +
+    geom_line()
+}
+
+getActivities <- function(cumulative_distance) {
+  cumulative_distance %>%
+    mutate(
+      deltacumulativedistance = lead(totalDistance) - totalDistance
+    ) %>%
+    rowwise %>%
+    mutate(
+      movingaveragecd = list(rollmean(as.numeric(cumulative_distance$deltacumulativedistance), TimeDifference=3))
+    )
+}
