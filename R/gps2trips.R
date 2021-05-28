@@ -7,7 +7,6 @@ library(dplyr)
 library(sf)
 library(leaflet)
 library(lwgeom)
-library(zoo)
 
 #' Function to read GPS points into trips
 #'
@@ -137,13 +136,21 @@ plotSpeed <- function(cumulative_distance){
     geom_line()
 }
 
-getActivities <- function(cumulative_distance) {
+getMovingAverage <- function(cumulative_distance) {
   cumulative_distance %>%
     mutate(
-      deltacumulativedistance = lead(totalDistance) - totalDistance
-    ) %>%
-    rowwise %>%
+      deltacumulativedistance = lead(totalDistance) - totalDistance,
+      lag1 = lag(deltacumulativedistance),
+      lag2 = lag(deltacumulativedistance,2),
+      moveave = (lag1+lag2)/2
+    )
+}
+
+getActivities <- function(moving_average) {
+  moving_average %>%
     mutate(
-      movingaveragecd = list(rollmean(as.numeric(cumulative_distance$deltacumulativedistance), TimeDifference=3))
+      #ismoving = # when this value is greater than 0, this means the person is moving
+      #activity = cumsum(ifelse(ismoving != lag(ismoving) |
+       #                          is.na(lag(ismoving)), 1, 0))
     )
 }
