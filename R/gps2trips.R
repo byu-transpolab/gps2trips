@@ -128,6 +128,9 @@ getTotalDistance <- function(cleaned_data) { # This is the slope of the plotTime
     )
 }
 
+#' @param cumulative distance table from getTotalDistance function
+#' @return a ggplot of the cumulative distance over time (speed)
+
 plotSpeed <- function(cumulative_distance){
   ggplot(cumulative_distance %>%
            mutate(
@@ -136,21 +139,43 @@ plotSpeed <- function(cumulative_distance){
     geom_line()
 }
 
+#' @param cumulative distance table from getTotalDistance function
+#' @return the moving average of the cumulative distance traveled
+
 getMovingAverage <- function(cumulative_distance) {
   cumulative_distance %>%
     mutate(
       deltacumulativedistance = lead(totalDistance) - totalDistance,
       lag1 = lag(deltacumulativedistance),
-      lag2 = lag(deltacumulativedistance,2),
-      moveave = (lag1+lag2)/2
-    )
+      lag2 = lag(deltacumulativedistance, 2),
+      lag3 = lag(deltacumulativedistance, 3),
+      lag4 = lag(deltacumulativedistance, 4),
+      lag5 = lag(deltacumulativedistance, 5),
+      moveave = (lag1+lag2+lag3+lag4+lag5+deltacumulativedistance)/3
+    ) #%>%
+    #select(moving_average)
 }
 
-getActivities <- function(moving_average) {
+#' @param moving average table as calculated by the getMovingAverage function
+#' @return a ggplot of the moving average over time (speed)
+
+plotMovingAverage <- function(moving_average) {
+  ggplot(moving_average,
+           aes(x=Time, y = moveave, color=factor(Date))) +
+    geom_line()
+}
+
+#' @param moving average table from the getMovingAverage function and moving threshold
+#' value where the default is set to 3 meters/second
+#' @return the number of activities per day
+
+getActivities <- function(moving_average, movethreshold = 3) {
   moving_average %>%
+    drop_na(moveave) %>%
     mutate(
-      #ismoving = # when this value is greater than 0, this means the person is moving
-      #activity = cumsum(ifelse(ismoving != lag(ismoving) |
-       #                          is.na(lag(ismoving)), 1, 0))
-    )
+      ismoving = moveave > movethreshold,
+      activity = cumsum(ifelse(ismoving != lag(ismoving) |
+                                 is.na(lag(ismoving)), 1, 0))
+    ) %>%
+    summarise(nactivities = max(activity, na.rm = TRUE))
 }
