@@ -9,19 +9,6 @@ library(leaflet)
 library(lwgeom)
 
 #' Function to read GPS points into trips
-#'
-#' @param df A dataframe containing a stream of GPS points
-#' @param x The name of the x-coordinate variable in df
-#' @param y The name of the y-coordinate variable in df
-#'
-#'
-#' @examples
-#' # examples of how to use this function
-#'
-#' @export
-#'
-gps2trips <- function(df, x = "x", y = "y") {}
-
 
 #' Calculate the distance the person traveled using the latitude and longitude
 #' values and Halversine formula
@@ -38,8 +25,8 @@ distanceTraveled <- function(lat,lon,lat1,lon1) {
   dlat <- b1 - a1
   a <- (sin(dlat/2))^2 + cos(a1)*cos(b1)*(sin(dlon/2))^2
   c <- 2*atan2(sqrt(a), sqrt(1 - a))
-  R <- 6378137 # Avg radius of earth in km
-  d <- R*c  # Distancein meters
+  R <- 6378137 # Avg radius of earth in m
+  d <- R*c  # Distance in meters
   return(d)
 }
 
@@ -60,7 +47,7 @@ cleanData <- function(raw_data) {
     raw_data %>%
     group_by(userId) %>%
     arrange(timestamp) %>%
-    slice(1:500) %>%
+    #slice(1:8000) %>%
     # clean up times as lubridate objects
     mutate(
       Date = lubridate::date(timestamp),   # Separate Date and Time columns
@@ -90,15 +77,15 @@ cleanData <- function(raw_data) {
     ) %>%
     rowwise() %>%
     mutate(
-      distance_Meters = distanceTraveled(lat, lon, lat1, lon1),
+      distance_Meters = distanceTraveled(lat, lon, lat1, lon1)
     ) %>%
-    select(userId,Date,Time,TimeDifference,distance_Meters)
+    select(userId,timestamp,Date,Time,TimeDifference,distance_Meters)
 }
 
 #' @param cleaned data frame from cleanData function
 #' @return world geographic map showing GPS points
 
-plotData <- function(cleaned_data) {
+plotGPSData <- function(cleaned_data) {
   sf_Data <- st_as_sf(cleaned_data,coords = c("lon","lat"))
   leaflet(sf_Data) %>%
     addProviderTiles(providers$Esri.WorldGrayCanvas) %>%
@@ -106,24 +93,16 @@ plotData <- function(cleaned_data) {
 }
 
 #' Where the slope of this line is zero is likely where a trip destination is
-#' @param cumulative distance calculated from getTotalDistance function
+#' @param cleaned data from the cleanData function
 #' @return line graph of distance traveled over time
 
-plotTimeline <- function(cumulative_distance) {
-  ggplot(df, aes(x=Time,y=totalDistance)) + xlab("Time(s)") +ylab("Total Distance(m)") +
+plotTimeline <- function(cleaned_data) { # This is the slope of the plotTimeline curve
+  cumulative_distance <- cleaned_data %>%
+    ungroup %>%
+    group_by(Date) %>%
+    arrange(timestamp)%>%
+    mutate(totalDistance = cumsum(distance_Meters))
+  ggplot(cumulative_distance, aes(x=Time,y=totalDistance, color = factor(Date))) +
+    xlab("Time(s)") +ylab("Total Distance(m)") +
     geom_line()
 }
-
-#' @param cleaned data fram from cleanData function
-#' @return total distance to use in plotData function
-
-getTotalDistance <- function(cleaned_data) { # This is the slope of the plotTimeline curve
-  cleaned_data %>%
-    ungroup() %>%
-    mutate(
-      totalDistance = cumsum(distance_Meters)
-    )
-}
-
-#Figure out a way to isolate where the slopes are zero or isolate the "columns"
-# where the slope is nearly infinite
