@@ -7,6 +7,7 @@ library(dplyr)
 library(sf)
 library(leaflet)
 library(lwgeom)
+library(dbscan)
 
 #' Function to read GPS points into trips
 
@@ -41,10 +42,10 @@ getData <- function(input_files) {
 }
 
 #' @param Raw GPS data as read in with 'getData()'
-#' @return A clean tibble with only selected variables
+#' @return A clean tibble with only selected variables and no outliers
 cleanData <- function(raw_data) {
 
-    raw_data %>%
+  raw_data %>%
     group_by(userId) %>%
     arrange(timestamp) %>%
     #slice(1:8000) %>%
@@ -77,9 +78,11 @@ cleanData <- function(raw_data) {
     ) %>%
     rowwise() %>%
     mutate(
-      distance_Meters = distanceTraveled(lat, lon, lat1, lon1)
+      distance_Meters = distanceTraveled(lat, lon, lat1, lon1),
+      speed = distance_Meters / as.numeric(TimeDifference)
     ) %>%
-    select(userId,timestamp,Date,Time,TimeDifference,distance_Meters)
+    filter(speed < 36, altitude < 1700) %>%      # Highest speed limit in Utah Valley is 80 mph = 36 m/s
+    select(userId,timestamp,Date,Time,TimeDifference,lat, lon, distance_Meters)
 }
 
 #' @param cleaned data frame from cleanData function
@@ -105,4 +108,23 @@ plotTimeline <- function(cleaned_data) { # This is the slope of the plotTimeline
   ggplot(cumulative_distance, aes(x=Time,y=totalDistance, color = factor(Date))) +
     xlab("Time(s)") +ylab("Total Distance(m)") +
     geom_line()
+}
+
+#' Determine the number of clusters (trips) made each day
+#' @param cleaned data from the cleanData function
+#' @return graph of color coded clusters and the number of clusters (numClusters)
+
+getClusters <- function(cleaned_data) {
+    cluster_data <- cleaned_data %>%
+    filter(Date == "2021-04-01") %>%
+    st_transform(2280)
+
+  cluster_data$Time = as.numeric(cluster_data$Time)
+  cluster_data$x = st_coordinates(cluster_data)[,1]
+  cluster_data$y = st_coordinates(cluster_data)[,2]
+  cluster_data <- cluster_data %>% select(Date,Time,x,y)
+
+  numClusters <- dbscan(data.frame(Time = cluster_data$Time, x = cluster_data$x,
+                                   y = cluster_data$y), eps = 50, minPts = 20)
+  plot(cluster_data$x,cluster_data$y,col = numClusters$cluster+1, pch = 20)
 }
