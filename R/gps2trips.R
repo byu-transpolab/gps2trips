@@ -1,5 +1,7 @@
 # everything this function does goes in here.
 # load the necessary packages
+# remember to also load the targets package in the console if necessary
+
 library(lubridate)
 library(tidyverse)
 library(hms)
@@ -8,6 +10,7 @@ library(sf)
 library(leaflet)
 library(lwgeom)
 library(dbscan)
+library(plotly)
 
 #' Function to read GPS points into trips
 
@@ -81,7 +84,7 @@ cleanData <- function(raw_data) {
       distance_Meters = distanceTraveled(lat, lon, lat1, lon1),
       speed = distance_Meters / as.numeric(TimeDifference)
     ) %>%
-    filter(speed < 36, altitude < 1700) %>%      # Highest speed limit in Utah Valley is 80 mph = 36 m/s
+    #filter(speed < 36, altitude < 1700) %>%      # Highest speed limit in Utah Valley is 80 mph = 36 m/s
     select(userId,timestamp,Date,Time,TimeDifference,lat, lon, distance_Meters)
 }
 
@@ -110,21 +113,39 @@ plotTimeline <- function(cleaned_data) { # This is the slope of the plotTimeline
     geom_line()
 }
 
-#' Determine the number of clusters (trips) made each day
+#' Transform Lat and Lon into different units and select a particular date to look at
 #' @param cleaned data from the cleanData function
-#' @return graph of color coded clusters and the number of clusters (numClusters)
+#' @return filtered data frame used for plotting clusters
 
-getClusters <- function(cleaned_data) {
-    cluster_data <- cleaned_data %>%
-    filter(Date == "2021-04-01") %>%
+getClusterData <- function(cleaned_data) {
+  cluster_data <- cleaned_data %>%
+    filter(Date == "2021-02-23") %>%
     st_transform(2280)
 
   cluster_data$Time = as.numeric(cluster_data$Time)
   cluster_data$x = st_coordinates(cluster_data)[,1]
   cluster_data$y = st_coordinates(cluster_data)[,2]
-  cluster_data <- cluster_data %>% select(Date,Time,x,y)
 
+  cluster_data <- cluster_data %>%
+    select(Date,Time,x,y)
+}
+
+#' Plot the cluster data in three dimensions
+#' @param cluster data from the getClusterData function
+#' @return three dimensional plot with color-coded clusters
+
+plot3DClusters <- function(cluster_data) {
   numClusters <- dbscan(data.frame(Time = cluster_data$Time, x = cluster_data$x,
-                                   y = cluster_data$y), eps = 50, minPts = 20)
-  plot(cluster_data$x,cluster_data$y,col = numClusters$cluster+1, pch = 20)
+                                   y = cluster_data$y), eps = 200, minPts = 300)
+
+  numClusters$cluster <- as.factor(numClusters$cluster)
+
+  plot_ly(cluster_data, x = cluster_data$x - mean(cluster_data$x),
+          y =cluster_data$y - mean(cluster_data$y),
+          z = cluster_data$Time/3600,
+          color = numClusters$cluster) %>%
+    add_markers() %>%
+    layout(scene=list(xaxis = list(title = 'Latitude'),
+                      yaxis = list(title = 'Longitude'),
+                      zaxis = list(title = 'Time')))
 }
