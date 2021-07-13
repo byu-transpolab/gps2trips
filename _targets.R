@@ -19,10 +19,11 @@ tar_option_set(packages = c("dplyr","hms", "lubridate", "tidyverse", "leaflet", 
 
 # End this file with a list of target objects.
 list(
-  tar_target(raw_data, getData("data/Health Study_5f5184e73e2fd848eac22aec_passivelocation_65.csv")),
+  tar_target(raw_data, getData("data/Health Study_5f5184e73e2fd848eac22aec_passivelocation_47.csv")),
   tar_target(cleaned_data, cleanData(raw_data)),
   tar_target(visual_map,plotGPSData(cleaned_data)),
-  tar_target(distance_vs_time, plotTimeline(cleaned_data))
+  tar_target(distance_vs_time, plotTimeline(cleaned_data)),
+  tar_target(cluster_data, getClusterData(cleaned_data)),
+  tar_target(threeDplot, plot3DClusters(cluster_data))
 )
-
 
