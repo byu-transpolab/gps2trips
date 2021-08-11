@@ -26,4 +26,3 @@ list(
   tar_target(cluster_data, getClusterData(cleaned_data)),
   tar_target(threeDplot, plot3DClusters(cluster_data))
 )
-
