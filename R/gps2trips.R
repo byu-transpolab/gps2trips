@@ -53,5 +53,13 @@ leaflet(caps_tr) %>%
   addCircleMarkers()
 
 # determine number of clusters and cluster location/duration
+# mess around with these parameters to see if I can find parameters that give reasonable
+# outcomes for several trace days
 
-cluster_info <- gpsactivs::dbscan_te(caps_tr)
+cluster_info <- gpsactivs::dbscan_te(caps_tr, eps = 25, minpts = 4,
+                                     delta_t = 300, entr_t = 1.75)
+
+# draw the k distance plot to determine optimal eps value
+# remember k is the same as the number of minPoints
+
+dbscan::kNNdistplot(x = as.numeric(caps_tr), k = 4)
