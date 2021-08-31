@@ -61,5 +61,3 @@ cluster_info <- gpsactivs::dbscan_te(caps_tr, eps = 25, minpts = 4,
 
 # draw the k distance plot to determine optimal eps value
 # remember k is the same as the number of minPoints
-
-dbscan::kNNdistplot(x = as.numeric(caps_tr), k = 4)
