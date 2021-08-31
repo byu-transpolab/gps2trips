@@ -58,6 +58,3 @@ leaflet(caps_tr) %>%
 
 cluster_info <- gpsactivs::dbscan_te(caps_tr, eps = 25, minpts = 4,
                                      delta_t = 300, entr_t = 1.75)
-
-# draw the k distance plot to determine optimal eps value
-# remember k is the same as the number of minPoints
