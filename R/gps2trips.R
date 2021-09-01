@@ -29,32 +29,34 @@ caps <- lapply(files_in_folder, function(x){
 }) %>%
   dplyr::bind_rows()
 
-# find record with most data points
-# caps %>%
-#   mutate(wday = wday(timestamp)) %>%
-#   group_by(date(date)) %>%
-#   summarise(n = n(), wday = wday[1], var = sd(lon)) %>% arrange(-n) %>%
-#   View()
+make_sf <- function(df) {
+  df %>%
+    st_as_sf(coords = c("lon", "lat"), crs = 4327) %>%
+    st_transform(32612)
+}
+
+make_clusters <- function(df) {
+  gpsactivs::dbscan_te(df, eps = 25, minpts = 4,
+                       delta_t = 300, entr_t = 0.5)
+}
 
 caps_tr <- caps %>%
-  filter(date(date) == as_date("2021-02-23")) %>%
-  arrange(timestamp) %>%
+  filter(date(date) %in% as_date(c("2021-02-23", "2021-02-24", "2021-02-25"))) %>%
   mutate(min = str_c(str_pad(hour(timestamp), width = 2, pad = "0"),
-                     str_pad(minute(timestamp), width = 2, pad = "0"))) %>%
+                     str_pad(minute(timestamp), width = 2, pad = "0"),
+                     str_pad(date(timestamp), width = 2, pad = "0"))) %>%
   group_by(min) %>% slice_sample(n = 20) %>%
-  st_as_sf(coords = c("lon", "lat"), crs = 4327) %>%
-  st_transform(32612)
-
-# plot trajectory on a map (isn't working right now)
-# only works if you comment out the st_as_sf and st_transform lines in code above
-
-leaflet(caps_tr) %>%
-  addProviderTiles(providers$OpenStreetMap) %>%
-  addCircleMarkers()
+  arrange(timestamp) %>%
+  group_by(date) %>%
+  nest() %>%
+  mutate(data = map(data, make_sf),
+         clusters = map(data, make_clusters))
 
 # determine number of clusters and cluster location/duration
 # mess around with these parameters to see if I can find parameters that give reasonable
 # outcomes for several trace days
 
-cluster_info <- gpsactivs::dbscan_te(caps_tr, eps = 25, minpts = 4,
-                                     delta_t = 300, entr_t = 1.75)
+leaflet() %>%
+  addProviderTiles(providers$OpenStreetMap) %>%
+  addCircleMarkers(data = df %>% st_transform(4326)) %>%
+  addCircleMarkers(data = cluster_info %>% st_transform(4326),color = "red")
