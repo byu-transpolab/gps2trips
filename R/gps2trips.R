@@ -35,13 +35,13 @@ make_sf <- function(df) {
     st_transform(32612)
 }
 
-make_clusters <- function(df) {
+ make_clusters <- function(df) {
   gpsactivs::dbscan_te(df, eps = 25, minpts = 4,
                        delta_t = 300, entr_t = 0.5)
 }
 
 caps_tr <- caps %>%
-  filter(date(date) %in% as_date(c("2021-02-23", "2021-02-24", "2021-02-25"))) %>%
+  filter(date(date) %in% as_date(c("2021-02-23"))) %>%
   mutate(min = str_c(str_pad(hour(timestamp), width = 2, pad = "0"),
                      str_pad(minute(timestamp), width = 2, pad = "0"),
                      str_pad(date(timestamp), width = 2, pad = "0"))) %>%
@@ -50,13 +50,9 @@ caps_tr <- caps %>%
   group_by(date) %>%
   nest() %>%
   mutate(data = map(data, make_sf),
-         clusters = map(data, make_clusters))
-
-# determine number of clusters and cluster location/duration
-# mess around with these parameters to see if I can find parameters that give reasonable
-# outcomes for several trace days
+         clusters = map(data, make_clusters)) %>%
 
 leaflet() %>%
   addProviderTiles(providers$OpenStreetMap) %>%
-  addCircleMarkers(data = df %>% st_transform(4326)) %>%
-  addCircleMarkers(data = cluster_info %>% st_transform(4326),color = "red")
+  addCircleMarkers(data = data %>% st_transform(4326)) %>%
+  addCircleMarkers(data = clusters %>% st_transform(4326),color = "red")
