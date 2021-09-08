@@ -41,7 +41,7 @@ make_sf <- function(df) {
 }
 
 caps_tr <- caps %>%
-  filter(date(date) %in% as_date(c("2021-02-23"))) %>%
+  filter(date(date) %in% as_date(c("2021-02-23", "2021-02-24", "2021-02-25"))) %>%
   mutate(min = str_c(str_pad(hour(timestamp), width = 2, pad = "0"),
                      str_pad(minute(timestamp), width = 2, pad = "0"),
                      str_pad(date(timestamp), width = 2, pad = "0"))) %>%
@@ -50,9 +50,14 @@ caps_tr <- caps %>%
   group_by(date) %>%
   nest() %>%
   mutate(data = map(data, make_sf),
-         clusters = map(data, make_clusters)) %>%
+         clusters = map(data, make_clusters))
 
-leaflet() %>%
+map_clusters <- function(caps_tr, date) {
+  df <- caps_tr %>% filter(date == date)
+  leaflet() %>%
   addProviderTiles(providers$OpenStreetMap) %>%
-  addCircleMarkers(data = data %>% st_transform(4326)) %>%
-  addCircleMarkers(data = clusters %>% st_transform(4326),color = "red")
+  addCircleMarkers(data = df$data[[1]] %>% st_transform(4326)) %>%
+  addCircleMarkers(data = df$clusters[[1]] %>% st_transform(4326),color = "red")
+}
+
+
