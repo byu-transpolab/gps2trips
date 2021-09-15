@@ -7,13 +7,13 @@ library(dbscan)
 library(sf)
 library(leaflet)
 
-
 # CAPS DATA (CONFIDENTIAL) ==============
 #
 # The file is really a folder that contains the trace information for
 # a single individual. Let's read all the CSV files in that folder
 
-files_in_folder <- dir("C:/Users/Gillian/Downloads/Research/gps2trips/data", full.names = TRUE)
+files_in_folder <- dir("data", full.names = TRUE)
+
 caps <- lapply(files_in_folder, function(x){
   readr::read_csv(x, col_types = list(userId = col_character())) %>%
     dplyr::transmute(
@@ -40,8 +40,9 @@ make_sf <- function(df) {
                        delta_t = 300, entr_t = 0.5)
 }
 
-caps_tr <- caps %>%
-  filter(date(date) %in% as_date(c("2021-02-23", "2021-02-24", "2021-02-25"))) %>%
+caps_tr <- function(caps){
+  caps %>%
+  filter(date(date) %in% as_date(c("2021-02-23", "2021-02-24", "2021-02-16"))) %>%
   mutate(min = str_c(str_pad(hour(timestamp), width = 2, pad = "0"),
                      str_pad(minute(timestamp), width = 2, pad = "0"),
                      str_pad(date(timestamp), width = 2, pad = "0"))) %>%
@@ -51,13 +52,13 @@ caps_tr <- caps %>%
   nest() %>%
   mutate(data = map(data, make_sf),
          clusters = map(data, make_clusters))
+}
 
-map_clusters <- function(caps_tr, date) {
+map_clusters <- function(caps_tr, date = "2021-02-16") {
   df <- caps_tr %>% filter(date == date)
-  leaflet() %>%
+  map <- leaflet() %>%
   addProviderTiles(providers$OpenStreetMap) %>%
   addCircleMarkers(data = df$data[[1]] %>% st_transform(4326)) %>%
   addCircleMarkers(data = df$clusters[[1]] %>% st_transform(4326),color = "red")
+  return (map)
 }
-
-
