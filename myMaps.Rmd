@@ -7,14 +7,14 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r Source}
+```{r Source, echo=FALSE, message=FALSE, warning=FALSE}
 source("R/gps2trips.R")
 
+library(targets)
 tar_load(clusters_per_date)
 
 for(date in clusters_per_date$date) {
-  map <- map_clusters(clusters_per_date, date)
-  return(map)
+  map_clusters(clusters_per_date, date)
 }
 ```
 
