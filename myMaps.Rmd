@@ -1,0 +1,21 @@
+---
+title: "My Maps"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r Source}
+source("R/gps2trips.R")
+
+tar_load(clusters_per_date)
+
+for(date in clusters_per_date$date) {
+  map <- map_clusters(clusters_per_date, date)
+  return(map)
+}
+```
+
+
