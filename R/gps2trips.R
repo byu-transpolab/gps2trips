@@ -56,6 +56,8 @@ caps_tr <- function(caps){
 
   # creates clusters_per_day target
 }
+
+  tar_make()
   tar_load(clusters_per_date)
   clusters_per_date <- clusters_per_date %>% dplyr::filter(date == date)
 
