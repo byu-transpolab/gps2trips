@@ -19,7 +19,6 @@ tar_option_set(packages = c("dplyr","hms", "lubridate", "tidyverse", "leaflet", 
 
 # End this file with a list of target objects.
 list(
-  tar_target(clusters_per_date,caps_tr(caps)),
-  tar_target(map_of_clusters, map_clusters(clusters_per_date, date))
+  tar_target(clusters_per_date,caps_tr(caps))
 )
 
