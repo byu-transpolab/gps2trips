@@ -6,6 +6,7 @@ library(lubridate)
 library(dbscan)
 library(sf)
 library(leaflet)
+library(targets)
 
 # CAPS DATA (CONFIDENTIAL) ==============
 #
@@ -42,7 +43,7 @@ make_sf <- function(df) {
 
 caps_tr <- function(caps){
   caps %>%
-  filter(date(date) %in% as_date(c("2021-02-23", "2021-02-24", "2021-02-16"))) %>%
+  #filter(date(date) %in% as_date(c("2021-02-23", "2021-02-24", "2021-02-16"))) %>%
   mutate(min = str_c(str_pad(hour(timestamp), width = 2, pad = "0"),
                      str_pad(minute(timestamp), width = 2, pad = "0"),
                      str_pad(date(timestamp), width = 2, pad = "0"))) %>%
@@ -52,13 +53,24 @@ caps_tr <- function(caps){
   nest() %>%
   mutate(data = map(data, make_sf),
          clusters = map(data, make_clusters))
-}
 
-map_clusters <- function(caps_tr, date = "2021-02-16") {
-  df <- caps_tr %>% filter(date == date)
-  map <- leaflet() %>%
-  addProviderTiles(providers$OpenStreetMap) %>%
-  addCircleMarkers(data = df$data[[1]] %>% st_transform(4326)) %>%
-  addCircleMarkers(data = df$clusters[[1]] %>% st_transform(4326),color = "red")
-  return (map)
+  # creates clusters_per_day target
 }
+  tar_load(clusters_per_date)
+  clusters_per_date <- clusters_per_date %>% dplyr::filter(date == date)
+
+maps_per_date <- clusters_per_date %>%
+  mutate(
+    map = map2(data, clusters, ~ ggplot()
+               + geom_sf(data = .x, color = "blue")
+               + geom_sf(data = .y, color = "green", size = 8)
+               + labs(
+                 title = "Trips made on",
+                 subtitle = date,
+                 x = "Longitude",
+                 y = "Latitude",
+               )
+    )
+  )
+
+print(maps_per_date$map)
