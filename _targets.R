@@ -9,6 +9,7 @@ library(targets)
 # Define custom functions and other global objects.
 # This is where you write source(\"R/functions.R\")
 # if you keep your functions in external scripts.
+
 source("R/gps2trips.R")
 
 #files_in_folder <- list.files("data")
@@ -19,6 +20,7 @@ tar_option_set(packages = c("dplyr","hms", "lubridate", "tidyverse", "leaflet", 
 
 # End this file with a list of target objects.
 list(
+  tar_target(caps, makeCaps("data/SensorData-1596231685391/")),
   tar_target(clusters_per_date,caps_tr(caps))
 )
 
