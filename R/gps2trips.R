@@ -13,7 +13,7 @@ library(targets)
 # The file is really a folder that contains the trace information for
 # a single individual. Let's read all the CSV files in that folder
 
-files_in_folder <- dir("data", full.names = TRUE)
+files_in_folder <- dir("data/SensorData-1617304845160/", full.names = TRUE)
 
 caps <- lapply(files_in_folder, function(x){
   readr::read_csv(x, col_types = list(userId = col_character())) %>%
@@ -59,7 +59,8 @@ caps_tr <- function(caps){
 
   tar_make()
   tar_load(clusters_per_date)
-  clusters_per_date <- clusters_per_date %>% dplyr::filter(date == date)
+  clusters_per_date <- clusters_per_date %>%
+    dplyr::filter(date == date)
 
 maps_per_date <- clusters_per_date %>%
   mutate(
