@@ -1,21 +1,13 @@
 ## code to prepare `DATASET` dataset goes here
 
-# Libraries
-library(tidyverse)
-library(lubridate)
-library(dbscan)
-library(sf)
-library(leaflet)
-library(targets)
-
 # CAPS DATA (CONFIDENTIAL) ==============
 #
 # The file is really a folder that contains the trace information for
 # a single individual. Let's read all the CSV files in that folder
 
-files_in_folder <- dir("data/SensorData-1617304845160/", full.names = TRUE)
-
-caps <- lapply(files_in_folder, function(x){
+makeCaps <- function(folder) {
+  files_in_folder <- dir(folder, full.names = TRUE)
+  caps <- lapply(files_in_folder, function(x){
   readr::read_csv(x, col_types = list(userId = col_character())) %>%
     dplyr::transmute(
       id = userId,
@@ -29,6 +21,7 @@ caps <- lapply(files_in_folder, function(x){
     ) %>% select(-hour, -minute, -second)
 }) %>%
   dplyr::bind_rows()
+}
 
 make_sf <- function(df) {
   df %>%
@@ -51,29 +44,10 @@ caps_tr <- function(caps){
   arrange(timestamp) %>%
   group_by(date) %>%
   nest() %>%
+  mutate(n = map(data, nrow)) %>%
+  filter(n > 400) %>%
   mutate(data = map(data, make_sf),
          clusters = map(data, make_clusters))
 
   # creates clusters_per_day target
 }
-
-  tar_make()
-  tar_load(clusters_per_date)
-  clusters_per_date <- clusters_per_date %>%
-    dplyr::filter(date == date)
-
-maps_per_date <- clusters_per_date %>%
-  mutate(
-    map = map2(data, clusters, ~ ggplot()
-               + geom_sf(data = .x, color = "blue")
-               + geom_sf(data = .y, color = "green", size = 8)
-               + labs(
-                 title = "Trips made on",
-                 subtitle = date,
-                 x = "Longitude",
-                 y = "Latitude",
-               )
-    )
-  )
-
-print(maps_per_date$map)
