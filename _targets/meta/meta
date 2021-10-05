@@ -1,12 +1,14 @@
 name|type|data|command|depend|seed|path|time|size|bytes|format|iteration|parent|children|seconds|warnings|error
 input_files|object|2e82245cf1b56c84||||||||||||||
-clusters_per_date|stem|7a342c02cbaad5f1|edeadd3723cc8fab|22dd4f9f340703b5|555922513||t18885.1179339671s|e8a345a2d3e4aaab|467011|rds|vector|||25.23|no nonmissing arguments to max returning Inf|
 raw_data|stem||913e6b9c166d01fc|f5dcfa07311601ae|-979620141||t18885.1179344634s||0|rds|vector|||0||could not find function files_in_folder
-files_in_folder|object|d90361b47c3aca9a||||||||||||||
-.Random.seed|object|c9f100302a6c3033||||||||||||||
-map_clusters|function|48986784a1cb7d1b||||||||||||||
+map_clusters|function|5e121debbaae394c||||||||||||||
+map_of_clusters|stem|1426fcc7efd116a7|ffa78a64a3aff37b|357b0380e827ee14|-1440429807||t18892.0517719319s||384|rds|vector|||0||could not find function map_clusters
+files_in_folder|object|373d1eeb1c4b67de||||||||||||||
+.Random.seed|object|876dbb91a7139356||||||||||||||
+maps_per_date|object|fe9557f823adb3d3||||||||||||||
 make_clusters|function|a75f69eb88938447||||||||||||||
 make_sf|function|6454a97ea89ec736||||||||||||||
-caps|object|8a3fb7beb6ff73d8||||||||||||||
-caps_tr|function|00bef764b7421e16||||||||||||||
-map_of_clusters|stem|a1e4ac9f633d5e76|ffa78a64a3aff37b|4ec837be6d257498|-1440429807||t18885.1422999369s|78f9b90bc7b9072c|11217|rds|vector|||0.19|package hms was built under R version 4.0.5|
+makeCaps|function|0e4b6bd1700e5574||||||||||||||
+caps_tr|function|52ff7ef9d0b85267||||||||||||||
+caps|stem|5f52915eceefe69c|a66e02be7f5ac964|653b61164c523348|-104144508||t18905.919610061s|5ccb3d41d74b2974|116|rds|vector|||1.86|package sf was built under R version 4.0.5|
+clusters_per_date|stem|fa1ac1f0730be6ce|edeadd3723cc8fab|9a6eb696b2a81edd|555922513||t18892.2393288713s||2354911|rds|vector|||0.05||Problem with mutate column min.34mi39m min  str_c....31mx39m do not know how to convert x to class POSIXlt
