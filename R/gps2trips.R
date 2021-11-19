@@ -23,7 +23,16 @@ makeCaps <- function(folder) {
     dplyr::bind_rows() %>%
     mutate(
       activityDay = yesterday(timestamp)
-    )
+    ) %>%
+    mutate(min = str_c(str_pad(hour(timestamp), width = 2, pad = "0"),
+                        str_pad(minute(timestamp), width = 2, pad = "0"),
+                        str_pad(date(timestamp), width = 2, pad = "0"))) %>%
+    group_by(min) %>% slice_sample(n = 20) %>%
+    arrange(timestamp) %>%
+    group_by(date) %>%
+    nest() %>%
+    mutate(n = map(data, nrow)) %>%
+    filter(n > 400)
 }
 
 #' Function to compute meaningful day
@@ -61,16 +70,6 @@ make_sf <- function(df) {
 
 caps_tr <- function(caps){
   caps %>%
-  #filter(date(date) %in% as_date(c("2021-02-23", "2021-02-24", "2021-02-16"))) %>%
-  mutate(min = str_c(str_pad(hour(timestamp), width = 2, pad = "0"),
-                     str_pad(minute(timestamp), width = 2, pad = "0"),
-                     str_pad(date(timestamp), width = 2, pad = "0"))) %>%
-  group_by(min) %>% slice_sample(n = 20) %>%
-  arrange(timestamp) %>%
-  group_by(date) %>%
-  nest() %>%
-  mutate(n = map(data, nrow)) %>%
-  filter(n > 400) %>%
   mutate(data = map(data, make_sf),
          clusters = map(data, make_clusters))
 

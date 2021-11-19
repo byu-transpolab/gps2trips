@@ -4,11 +4,14 @@ raw_data|stem||913e6b9c166d01fc|f5dcfa07311601ae|-979620141||t18885.1179344634s|
 map_clusters|function|5e121debbaae394c||||||||||||||
 map_of_clusters|stem|1426fcc7efd116a7|ffa78a64a3aff37b|357b0380e827ee14|-1440429807||t18892.0517719319s||384|rds|vector|||0||could not find function map_clusters
 files_in_folder|object|373d1eeb1c4b67de||||||||||||||
-.Random.seed|object|876dbb91a7139356||||||||||||||
 maps_per_date|object|fe9557f823adb3d3||||||||||||||
+makeMaps|function|62b4b5f6a1b95345||||||||||||||
+yesterday|function|bd99f1f904cb5a87||||||||||||||
+.Random.seed|object|5322eb24d2f989a3||||||||||||||
 make_clusters|function|a75f69eb88938447||||||||||||||
 make_sf|function|6454a97ea89ec736||||||||||||||
-makeCaps|function|0e4b6bd1700e5574||||||||||||||
-caps_tr|function|52ff7ef9d0b85267||||||||||||||
-caps|stem|5f52915eceefe69c|a66e02be7f5ac964|653b61164c523348|-104144508||t18905.919610061s|5ccb3d41d74b2974|116|rds|vector|||1.86|package sf was built under R version 4.0.5|
-clusters_per_date|stem|fa1ac1f0730be6ce|edeadd3723cc8fab|9a6eb696b2a81edd|555922513||t18892.2393288713s||2354911|rds|vector|||0.05||Problem with mutate column min.34mi39m min  str_c....31mx39m do not know how to convert x to class POSIXlt
+makeCaps|function|11fab23931ec11ca||||||||||||||
+caps_tr|function|bcbb323583d39c7e||||||||||||||
+caps|stem|174d3e9a29e9b5d7|4711166df033a0d3|0864a931550b05d1|-104144508||t18949.981001613s|500a30bc01626aff|9196910|rds|vector|||129.22|package sf was built under R version 4.1.2|
+clusters_per_date|stem|fa5868d93fea0ab1|edeadd3723cc8fab|b7baf853b23d2d4a|555922513||t18949.9837881914s|d62dd26770e127ad|12182702|rds|vector|||229.78|no nonmissing arguments to max returning Inf|
+cluster_maps|stem|3af8f0de88784e7d|7272d59089a5de10|1ce04d8cd28c990e|416852581||t18949.9849714112s|f3dd248a76764208|207665589|rds|vector|||0.46||
