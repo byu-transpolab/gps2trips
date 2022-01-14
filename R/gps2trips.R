@@ -6,33 +6,25 @@
 # a single individual. Let's read all the CSV files in that folder
 
 makeCaps <- function(folder) {
-  files_in_folder <- unzip(folder, list = TRUE)$Name
+  files_in_folder <- dir(folder, full.names = TRUE)
+
   caps <- lapply(files_in_folder, function(x){
-    readr::read_csv(unz(folder,x), col_types = list(userId = col_character())) %>%
+    readr::read_csv(x, col_types = list(userId = col_character()))%>%
       dplyr::transmute(
         id = userId,
         lat, lon,
-        timestamp,
+        timestamp = time,
         date = lubridate::date(timestamp),   # Separate Date and Time columns
         hour = lubridate::hour(timestamp),
         minute = lubridate::minute(timestamp),
         second = lubridate::second(timestamp),
         time = hms::as_hms(str_c(hour, minute, second, sep = ":")),
-      ) %>% select(-hour, -minute, -second)
+      ) %>%  select(-hour, -minute, -second)
   }) %>%
-    dplyr::bind_rows() %>%
-    mutate(
-      activityDay = yesterday(timestamp)
-    ) %>%
-    mutate(min = str_c(str_pad(hour(timestamp), width = 2, pad = "0"),
-                        str_pad(minute(timestamp), width = 2, pad = "0"),
-                        str_pad(date(timestamp), width = 2, pad = "0"))) %>%
-    group_by(min) %>% slice_sample(n = 20) %>%
-    arrange(timestamp) %>%
-    group_by(date) %>%
-    nest() %>%
-    mutate(n = map(data, nrow)) %>%
-    filter(n > 400)
+    dplyr::bind_rows() #%>%
+    #mutate(
+      #activityDay = yesterday(timestamp)
+    #)
 }
 
 #' Function to compute meaningful day
@@ -70,6 +62,16 @@ make_sf <- function(df) {
 
 caps_tr <- function(caps){
   caps %>%
+  #filter(date(date) %in% as_date(c("2021-02-23", "2021-02-24", "2021-02-16"))) %>%
+  mutate(min = str_c(str_pad(hour(timestamp), width = 2, pad = "0"),
+                     str_pad(minute(timestamp), width = 2, pad = "0"),
+                     str_pad(date(timestamp), width = 2, pad = "0"))) %>%
+  group_by(min) %>% slice_sample(n = 20) %>%
+  arrange(timestamp) %>%
+  group_by(date) %>%
+  nest() %>%
+  mutate(n = map(data, nrow)) %>%
+  filter(n > 400) %>%
   mutate(data = map(data, make_sf),
          clusters = map(data, make_clusters))
 
